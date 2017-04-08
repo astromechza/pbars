@@ -14,4 +14,4 @@ for i := 0; i < 400; i++ {
 pp.Done()
 ```
 
-![progress gif](http://i.imgur.com/tlD6QqI.gifv)
+![progress gif](http://i.imgur.com/tlD6QqI.gif?raw=true)
