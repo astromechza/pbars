@@ -40,3 +40,29 @@ func TestProgressPrinterUTF8Stuff(t *testing.T) {
 
 	Equal(t, buff.String(), "Special λϴ |████████████████████▏                 | 53.00% 0.09/s 8m52.07s ")
 }
+
+func TestProgressPrinterNonTTY(t *testing.T) {
+	pp := NewProgressPrinter("Special λϴ", 40, true)
+	buff := bytes.NewBufferString("")
+	pp.Output = buff
+	pp.NonTTY = true
+
+	customRateWatcher := NewUpdateAveragingRateWatcher(4)
+	customRateWatcher.timefunc = func() time.Time { return time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC) }
+	pp.Ratewatcher = customRateWatcher
+
+	pp.Update(0, 100)
+
+	customRateWatcher.timefunc = func() time.Time { return time.Date(2000, 1, 1, 0, 10, 0, 0, time.UTC) }
+	pp.Ratewatcher = customRateWatcher
+
+	pp.Update(53, 100)
+
+	customRateWatcher.timefunc = func() time.Time { return time.Date(2000, 1, 1, 0, 15, 0, 0, time.UTC) }
+	pp.Ratewatcher = customRateWatcher
+
+	pp.Update(90, 100)
+	pp.Done()
+
+	Equal(t, buff.String(), "Special λϴ |██████████████████████████████████▏   | 90.00% 0.10/s 15m0.00s \n")
+}

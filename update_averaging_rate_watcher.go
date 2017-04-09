@@ -54,29 +54,31 @@ func (nw *UpdateAveragingRateWatcher) Update(position, length int64) {
 	if position > 0 && length > 0 {
 		nw.estimatedPercentage = float32(position) / float32(length)
 		positionDelta := position - nw.lastUpdatePosition
-		elapsed := now.Sub(nw.lastUpdateTime)
-		if elapsed <= 0 {
-			return
-		}
-		currentRate := float32(positionDelta) / (float32(elapsed) / float32(time.Second))
-		nw.previousRatesBuffer.Value = currentRate
-		nw.previousRatesBuffer = nw.previousRatesBuffer.Next()
-
-		total := float32(0)
-		count := float32(0)
-		nw.previousRatesBuffer.Do(func(x interface{}) {
-			if x != nil {
-				v := x.(float32)
-				total += v
-				count += 1.0
+		if positionDelta >= 0 {
+			elapsed := now.Sub(nw.lastUpdateTime)
+			if elapsed <= 0 {
+				return
 			}
-		})
-		if count > 0 {
-			nw.estimatedRate = total / count
-			amountLeft := float64(length - position)
-			timeAtRate := (amountLeft / float64(nw.estimatedRate)) * float64(time.Second)
-			nw.estimatedRemaining = time.Duration(math.Abs(timeAtRate))
-			nw.hasEstimate = true
+			currentRate := float32(positionDelta) / (float32(elapsed) / float32(time.Second))
+			nw.previousRatesBuffer.Value = currentRate
+			nw.previousRatesBuffer = nw.previousRatesBuffer.Next()
+
+			total := float32(0)
+			count := float32(0)
+			nw.previousRatesBuffer.Do(func(x interface{}) {
+				if x != nil {
+					v := x.(float32)
+					total += v
+					count += 1.0
+				}
+			})
+			if count > 0 {
+				nw.estimatedRate = total / count
+				amountLeft := float64(length - position)
+				timeAtRate := (amountLeft / float64(nw.estimatedRate)) * float64(time.Second)
+				nw.estimatedRemaining = time.Duration(math.Abs(timeAtRate))
+				nw.hasEstimate = true
+			}
 		}
 		nw.lastUpdatePosition = position
 		nw.lastUpdateTime = now

@@ -38,6 +38,22 @@ func TestUpdateAveragingRateWatcher(t *testing.T) {
 	Equal(t, n.String(), "11.00% 1.7500/s 50.857142857s")
 }
 
+func TestUpdateAveragingRateWatcher_backwards(t *testing.T) {
+	n := NewUpdateAveragingRateWatcher(4)
+	n.timefunc = func() time.Time { return time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC) }
+	n.Update(0, 100)
+	Equal(t, n.String(), "0.00%")
+	n.timefunc = func() time.Time { return time.Date(2000, 1, 1, 0, 0, 1, 0, time.UTC) }
+	n.Update(10, 100)
+	Equal(t, n.String(), "10.00% 10.0000/s 9s")
+	n.timefunc = func() time.Time { return time.Date(2000, 1, 1, 0, 0, 2, 0, time.UTC) }
+	n.Update(5, 100)
+	Equal(t, n.String(), "5.00%")
+	n.timefunc = func() time.Time { return time.Date(2000, 1, 1, 0, 0, 3, 0, time.UTC) }
+	n.Update(10, 100)
+	Equal(t, n.String(), "10.00% 7.5000/s 12s")
+}
+
 func BenchmarkUpdateAveragingRateWatcherUpdateNTimes(b *testing.B) {
 	n := NewUpdateAveragingRateWatcher(4)
 	n.Update(0, int64(b.N))
