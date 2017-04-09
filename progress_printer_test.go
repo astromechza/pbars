@@ -38,5 +38,5 @@ func TestProgressPrinterUTF8Stuff(t *testing.T) {
 	pp.Update(53, 100)
 	pp.Reprint()
 
-	Equal(t, buff.String(), "\rSpecial λϴ |████████████████████▏                 | 53.00% 0.09/s 8m52.07s ")
+	Equal(t, buff.String(), "Special λϴ |████████████████████▏                 | 53.00% 0.09/s 8m52.07s ")
 }

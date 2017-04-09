@@ -45,6 +45,10 @@ type ProgressPrinter struct {
 	// pick between utf8 or ascii or to implement your own bar style.
 	Bardrawer BarDrawerFunction
 
+	// NonTTY can be used to set the progress bar into a nontty mode when writing output to files. The bar will be printed
+	// only once when Done is called, and interrupt messages will function as normal.
+	NonTTY bool
+
 	done           bool
 	lastprinttime  time.Time
 	lastdrawnwidth int
@@ -56,7 +60,8 @@ const minRedrawDelay = 16 * time.Millisecond
 // and output stream attached.
 func (pp *ProgressPrinter) Update(position, length int64) {
 	pp.Ratewatcher.Update(position, length)
-	if pp.Output != nil && (position >= length || time.Now().Sub(pp.lastprinttime) > minRedrawDelay) {
+	if !pp.NonTTY && time.Now().Sub(pp.lastprinttime) > minRedrawDelay {
+		pp.Output.Write([]byte("\r"))
 		pp.Reprint()
 	}
 }
@@ -64,7 +69,6 @@ func (pp *ProgressPrinter) Update(position, length int64) {
 // Reprint will reprint the progress bar in place. You probably don't want to call this but its public just
 // in case.
 func (pp *ProgressPrinter) Reprint() {
-	pp.Output.Write([]byte("\r"))
 	drawwidth := 0
 	if len(pp.Title) > 0 {
 		pp.Output.Write([]byte(pp.Title + " "))
@@ -116,19 +120,26 @@ func (pp *ProgressPrinter) Clear() {
 // with a newline.
 func (pp *ProgressPrinter) Done() {
 	pp.done = true
+	if !pp.NonTTY {
+		pp.Output.Write([]byte("\r"))
+	}
 	pp.Reprint()
 	pp.Output.Write([]byte("\n"))
 }
 
 // Interruptf interrupts the bar enough to print a message and then reprint the bar on the line below.
 func (pp *ProgressPrinter) Interruptf(format string, args ...interface{}) {
-	pp.Output.Write([]byte("\r"))
+	if !pp.NonTTY {
+		pp.Output.Write([]byte("\r"))
+	}
 	text := fmt.Sprintf(format, args...)
 	if len(text) < pp.lastdrawnwidth {
 		text += strings.Repeat(" ", pp.Width+3+pp.lastdrawnwidth-len(text))
 	}
 	fmt.Fprint(pp.Output, text+"\n")
-	pp.Reprint()
+	if !pp.NonTTY {
+		pp.Reprint()
+	}
 }
 
 var _ ProgressReceiver = (*ProgressPrinter)(nil)
