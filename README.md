@@ -17,7 +17,11 @@ for i := 0; i < 400; i++ {
 pp.Done()
 ```
 
-![progress gif](http://i.imgur.com/tlD6QqI.gif?raw=true)
+## Example
+
+There's an [example in the /example directory](example/main.go) which does the following:
+
+![progress gif](http://i.imgur.com/GFJTmhE.gif?raw=true)
 
 ## Features
 
