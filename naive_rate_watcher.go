@@ -7,8 +7,9 @@ import (
 )
 
 type NaiveRateWatcher struct {
-	startTime           time.Time
-	estimateTime        time.Time
+	firstupdatetime     time.Time
+	lastseenposition    int64
+	lastupdatetime      time.Time
 	estimatedPercentage float32
 	estimatedRemaining  time.Duration
 	estimatedRate       float32
@@ -28,22 +29,30 @@ func (nw *NaiveRateWatcher) EstimatedRemaining() time.Duration {
 	return nw.estimatedRemaining
 }
 
+func (nw *NaiveRateWatcher) OverallUnitsPerSecond() float32 {
+	return float32(nw.lastseenposition) * float32(time.Second) / float32(nw.OverallElapsed())
+}
+
+func (nw *NaiveRateWatcher) OverallElapsed() time.Duration {
+	return nw.lastupdatetime.Sub(nw.firstupdatetime)
+}
+
 func (nw *NaiveRateWatcher) Update(position, length int64) {
-	if nw.startTime.IsZero() {
-		nw.startTime = nw.timefunc()
-		return
-	}
-	nw.estimateTime = nw.timefunc()
-	elapsed := nw.estimateTime.Sub(nw.startTime)
+	nw.lastupdatetime = nw.timefunc()
 	if position > length {
 		position = length
 	}
+	nw.lastseenposition = position
+	if nw.firstupdatetime.IsZero() {
+		nw.firstupdatetime = nw.lastupdatetime
+		return
+	}
+	elapsed := nw.OverallElapsed()
 	nw.hasEstimate = false
 	if elapsed > 0 && position > 0 && length > 0 {
 		nw.estimatedPercentage = float32(position) / float32(length)
-		amountLeft := float64(length - position)
-		nw.estimatedRate = float32(position) * float32(time.Second) / float32(elapsed)
-		timeAtRate := (amountLeft * float64(time.Second) / float64(nw.estimatedRate))
+		nw.estimatedRate = nw.OverallUnitsPerSecond()
+		timeAtRate := (float64(length-position) * float64(time.Second) / float64(nw.estimatedRate))
 		nw.estimatedRemaining = time.Duration(math.Abs(timeAtRate))
 		nw.hasEstimate = true
 	}

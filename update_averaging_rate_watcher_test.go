@@ -26,16 +26,16 @@ func TestUpdateAveragingRateWatcher(t *testing.T) {
 	Equal(t, n.String(), "4.00% 1.0000/s 1m36s")
 	n.timefunc = func() time.Time { return time.Date(2000, 1, 1, 0, 0, 5, 0, time.UTC) }
 	n.Update(7, 100)
-	Equal(t, n.String(), "7.00% 1.1000/s 1m24.545452712s")
+	Equal(t, n.String(), "7.00% 1.5000/s 1m2s")
 	n.timefunc = func() time.Time { return time.Date(2000, 1, 1, 0, 0, 6, 0, time.UTC) }
 	n.Update(9, 100)
-	Equal(t, n.String(), "9.00% 1.2250/s 1m14.285712839s")
+	Equal(t, n.String(), "9.00% 1.7500/s 52s")
 	n.timefunc = func() time.Time { return time.Date(2000, 1, 1, 0, 0, 7, 0, time.UTC) }
 	n.Update(11, 100)
-	Equal(t, n.String(), "11.00% 1.3679/s 1m5.065270587s")
+	Equal(t, n.String(), "11.00% 2.0000/s 44.5s")
 	n.timefunc = func() time.Time { return time.Date(2000, 1, 1, 0, 0, 8, 0, time.UTC) }
 	n.Update(11, 100)
-	Equal(t, n.String(), "11.00% 1.4616/s 1m0.89187226s")
+	Equal(t, n.String(), "11.00% 1.7500/s 50.857142857s")
 }
 
 func BenchmarkUpdateAveragingRateWatcherUpdateNTimes(b *testing.B) {

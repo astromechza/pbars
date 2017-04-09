@@ -32,6 +32,8 @@ pbars.NewProgressPrinter("My Title", 50, true)   // utf8 mode
 pbars.NewProgressPrinter("My Title", 50, false)   // ascii mode
 ```
 
+- Uses the overall units per second and elapsed time once you call `Done`
+
 - Customisable unit formats
 
 By default the progress bar rate is formatted as 'units' per second. But often you'll want a measure of bytes or bits.

@@ -45,6 +45,7 @@ type ProgressPrinter struct {
 	// pick between utf8 or ascii or to implement your own bar style.
 	Bardrawer BarDrawerFunction
 
+	done           bool
 	lastprinttime  time.Time
 	lastdrawnwidth int
 }
@@ -75,7 +76,17 @@ func (pp *ProgressPrinter) Reprint() {
 		n, _ := fmt.Fprintf(pp.Output, "%.2f%% ", pp.Ratewatcher.PercentageComplete()*100.0)
 		drawwidth += n
 	}
-	if pp.Ratewatcher.HasEstimate() {
+	if pp.done {
+		if pp.ShowRate {
+			out := fmt.Sprintf("%s/s ", pp.UnitFunc(float64(pp.Ratewatcher.OverallUnitsPerSecond())))
+			drawwidth += utf8.RuneCountInString(out)
+			fmt.Fprint(pp.Output, out)
+		}
+		if pp.ShowTimeEstimate {
+			n, _ := fmt.Fprintf(pp.Output, "%s ", FormatDuration(pp.Ratewatcher.OverallElapsed()))
+			drawwidth += n
+		}
+	} else if pp.Ratewatcher.HasEstimate() {
 		if pp.ShowRate {
 			out := fmt.Sprintf("%s/s ", pp.UnitFunc(float64(pp.Ratewatcher.EstimatedUnitsPerSecond())))
 			drawwidth += utf8.RuneCountInString(out)
@@ -101,8 +112,11 @@ func (pp *ProgressPrinter) Clear() {
 	pp.Output.Write([]byte("\r"))
 }
 
-// Done writes a newline so we move on to the next line.
+// Done reprints the bar using the overall rate and overall elapsed time and terminates the bar
+// with a newline.
 func (pp *ProgressPrinter) Done() {
+	pp.done = true
+	pp.Reprint()
 	pp.Output.Write([]byte("\n"))
 }
 

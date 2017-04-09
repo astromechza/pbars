@@ -12,7 +12,6 @@ type UpdateAveragingRateWatcher struct {
 	lastUpdateTime      time.Time
 	lastUpdatePosition  int64
 	previousRatesBuffer *ring.Ring
-	estimateTime        time.Time
 	estimatedPercentage float32
 	estimatedRemaining  time.Duration
 	estimatedRate       float32
@@ -32,22 +31,30 @@ func (nw *UpdateAveragingRateWatcher) EstimatedRemaining() time.Duration {
 	return nw.estimatedRemaining
 }
 
+func (nw *UpdateAveragingRateWatcher) OverallUnitsPerSecond() float32 {
+	return float32(nw.lastUpdatePosition) * float32(time.Second) / float32(nw.OverallElapsed())
+}
+
+func (nw *UpdateAveragingRateWatcher) OverallElapsed() time.Duration {
+	return nw.lastUpdateTime.Sub(nw.startTime)
+}
+
 func (nw *UpdateAveragingRateWatcher) Update(position, length int64) {
-	if nw.startTime.IsZero() {
-		nw.startTime = nw.timefunc()
-		nw.lastUpdatePosition = position
-		nw.lastUpdateTime = nw.startTime
-		return
-	}
+	now := nw.timefunc()
 	if position > length {
 		position = length
+	}
+	if nw.startTime.IsZero() {
+		nw.startTime = now
+		nw.lastUpdatePosition = position
+		nw.lastUpdateTime = now
+		return
 	}
 	nw.hasEstimate = false
 	if position > 0 && length > 0 {
 		nw.estimatedPercentage = float32(position) / float32(length)
-		now := nw.timefunc()
-		elapsed := now.Sub(nw.lastUpdateTime)
 		positionDelta := position - nw.lastUpdatePosition
+		elapsed := now.Sub(nw.lastUpdateTime)
 		if elapsed <= 0 {
 			return
 		}
@@ -65,13 +72,14 @@ func (nw *UpdateAveragingRateWatcher) Update(position, length int64) {
 			}
 		})
 		if count > 0 {
-			nw.estimateTime = nw.timefunc()
 			nw.estimatedRate = total / count
 			amountLeft := float64(length - position)
 			timeAtRate := (amountLeft / float64(nw.estimatedRate)) * float64(time.Second)
 			nw.estimatedRemaining = time.Duration(math.Abs(timeAtRate))
 			nw.hasEstimate = true
 		}
+		nw.lastUpdatePosition = position
+		nw.lastUpdateTime = now
 	}
 }
 

@@ -30,4 +30,10 @@ type RateWatcher interface {
 
 	// EstimatedRemaining should return an estimated time remaining
 	EstimatedRemaining() time.Duration
+
+	// OverallUnitsPerSecond should return the overall rate seen by the watcher. Pretty much length / elapsed.
+	OverallUnitsPerSecond() float32
+
+	// OverallElapsed should return the time since the bar was first seen by the user
+	OverallElapsed() time.Duration
 }
