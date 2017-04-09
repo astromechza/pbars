@@ -1,0 +1,12 @@
+language: go
+
+go:
+  - 1.8
+  - master
+
+install:
+  - go get gopkg.in/go-playground/assert.v1
+
+script:
+  - go test -cover -v .
+  - go test -bench=.
