@@ -21,7 +21,9 @@ pp.Done()
 
 There's an [example in the /example directory](example/main.go) which does the following:
 
-![progress gif](http://i.imgur.com/GFJTmhE.gif?raw=true)
+![progress gif](http://i.imgur.com/v0G2JuG.gif?raw=true)
+
+\* *cursor flickering is just the high (16ms) update rate and the way the gif was rendered*
 
 ## Features
 
