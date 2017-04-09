@@ -9,29 +9,32 @@ import (
 	"unicode/utf8"
 )
 
-type countingWriter struct {
-	Next  io.Writer
-	Count int64
-}
-
-func (w *countingWriter) Write(p []byte) (int, error) {
-	n, err := w.Next.Write(p)
-	w.Count += int64(n)
-	return n, err
-}
-
-var _ io.Writer = (*countingWriter)(nil)
-
+// ProgressPrinter is the model that represents a single progress bar and is responsible for
+// printing it to the terminal correctly. It ties together all of the formatting, rate
+// calculations, and bar drawing.
 type ProgressPrinter struct {
-	Title            string
-	Output           io.Writer
-	Width            int
-	ShowPercentage   bool
-	ShowRate         bool
+	// Title is the string printed to the left of the progress bar. It may be blank,
+	// and it may contain utf8 characters. It is not included in the width.
+	Title string
+	// Output is the output writer to print the progress bar to. This is usually os.Stdout,
+	// but for tests and certain other cases can be overriden or be nil.
+	Output io.Writer
+	// Width is the width of the actual bar in the progress bar.
+	Width int
+	// ShowPercentage sets whether the percentage should be visible on the right hand side.
+	ShowPercentage bool
+	// ShowRate sets whether the rate in units per second should be visible on the right hand side.
+	ShowRate bool
+	// ShowTimeEstimate sets whether the estimate of the remaining time should be visible on the right hand side.
 	ShowTimeEstimate bool
-	UnitFunc         UnitFormatFunc
-	Ratewatcher      RateWatcher
-	Bardrawer        BarDrawerFunction
+	// UnitFunc is the formatter applied to the rate value in order to format it to subject-specific units.
+	UnitFunc UnitFormatFunc
+	// RateWatcher is a model that is used to track the rate, percentage, and time estimates. You probably don't
+	// want to change this.
+	Ratewatcher RateWatcher
+	// Bardrawer is the function used to turn the percentage and width into a progress bar. This can be overriden to
+	// pick between utf8 or ascii or to implement your own bar style.
+	Bardrawer BarDrawerFunction
 
 	lastprinttime  time.Time
 	lastdrawnwidth int
@@ -39,6 +42,8 @@ type ProgressPrinter struct {
 
 const minRedrawDelay = 16 * time.Millisecond
 
+// Update updates the progress bar, possibly redrawing it if the position has changed and there is
+// and output stream attached.
 func (pp *ProgressPrinter) Update(position, length int64) {
 	pp.Ratewatcher.Update(position, length)
 	if pp.Output != nil && (position >= length || time.Now().Sub(pp.lastprinttime) > minRedrawDelay) {
@@ -46,6 +51,8 @@ func (pp *ProgressPrinter) Update(position, length int64) {
 	}
 }
 
+// Reprint will reprint the progress bar in place. You probably don't want to call this but its public just
+// in case.
 func (pp *ProgressPrinter) Reprint() {
 	pp.Output.Write([]byte("\r"))
 	drawwidth := 0
@@ -78,19 +85,19 @@ func (pp *ProgressPrinter) Reprint() {
 	pp.lastprinttime = time.Now()
 }
 
-// Clear just clears the line using a \r character and spaces
+// Clear just clears the line using a \r character and spaces.
 func (pp *ProgressPrinter) Clear() {
 	pp.Output.Write([]byte("\r"))
 	pp.Output.Write([]byte(strings.Repeat(" ", pp.Width+3+pp.lastdrawnwidth)))
 	pp.Output.Write([]byte("\r"))
 }
 
-// Done just writes a newline so we move on
+// Done writes a newline so we move on to the next line.
 func (pp *ProgressPrinter) Done() {
 	pp.Output.Write([]byte("\n"))
 }
 
-// Interruptf interrupts the bar enough to print a message and then reprint the bar
+// Interruptf interrupts the bar enough to print a message and then reprint the bar on the line below.
 func (pp *ProgressPrinter) Interruptf(format string, args ...interface{}) {
 	pp.Output.Write([]byte("\r"))
 	text := fmt.Sprintf(format, args...)
@@ -105,6 +112,7 @@ var _ ProgressReceiver = (*ProgressPrinter)(nil)
 
 // NewProgressPrinter constructs a progress bar printer for most use cases
 func NewProgressPrinter(title string, width int, utf8 bool) *ProgressPrinter {
+
 	barfunc := DrawBarASCII
 	if utf8 {
 		barfunc = DrawBarUTF8
