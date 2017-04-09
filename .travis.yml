@@ -10,3 +10,5 @@ install:
 script:
   - go test -cover -v .
   - go test -bench=.
+  - go build -o build/example github.com/AstromechZA/pbars/example
+  - ./build/example

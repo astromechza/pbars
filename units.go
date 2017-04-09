@@ -17,11 +17,11 @@ var byteunits = []string{"B", "KB", "MB", "GB", "TB", "PB"}
 func ByteFormatFunc(v float64) string {
 	unit := byteunits[0]
 	for i := 0; i < len(byteunits); i++ {
+		unit = byteunits[i]
 		if v < 1024.0 {
 			break
 		}
 		v /= 1024
-		unit = byteunits[i]
 	}
 	return fmt.Sprintf("%.2f%s", v, unit)
 }

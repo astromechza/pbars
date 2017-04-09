@@ -5,7 +5,9 @@ import (
 	"strings"
 )
 
-type BarDrawerFunction func(float32, int) string
+// BarDrawerFunction is a function that takes in the progress value (0.0 -> 1.0) and a width
+// and returns a string containing the progress bar. It does not handle any other information.
+type BarDrawerFunction func(progress float32, width int) string
 
 func clamp(v, bottom, top float32) float32 {
 	if v < bottom {
@@ -23,6 +25,8 @@ func ratioBlock(v float32) rune {
 	return ratioBlocks[index]
 }
 
+// DrawBarASCII prints a bar that looks like '[===============.....]' it should be compatible with
+// any terminal but can only print whole characters and so has slightly less resolution than others.
 func DrawBarASCII(perc float32, width int) string {
 	perc = clamp(perc, 0, 1.0)
 	innerwidth := width - 2
@@ -37,6 +41,9 @@ func DrawBarASCII(perc float32, width int) string {
 
 var _ BarDrawerFunction = DrawBarASCII
 
+// DrawBarUTF8 prints a bar using the utf8 block characters. Because UTF8 has fractional block
+// characters, this bar has a high resolution and is effective with less width than the ascii
+// counterpart.
 func DrawBarUTF8(perc float32, width int) string {
 	perc = clamp(perc, 0, 1.0)
 	innerwidth := width - 2

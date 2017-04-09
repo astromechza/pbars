@@ -13,25 +13,34 @@ import (
 // printing it to the terminal correctly. It ties together all of the formatting, rate
 // calculations, and bar drawing.
 type ProgressPrinter struct {
+
 	// Title is the string printed to the left of the progress bar. It may be blank,
 	// and it may contain utf8 characters. It is not included in the width.
 	Title string
+
 	// Output is the output writer to print the progress bar to. This is usually os.Stdout,
 	// but for tests and certain other cases can be overriden or be nil.
 	Output io.Writer
+
 	// Width is the width of the actual bar in the progress bar.
 	Width int
+
 	// ShowPercentage sets whether the percentage should be visible on the right hand side.
 	ShowPercentage bool
+
 	// ShowRate sets whether the rate in units per second should be visible on the right hand side.
 	ShowRate bool
+
 	// ShowTimeEstimate sets whether the estimate of the remaining time should be visible on the right hand side.
 	ShowTimeEstimate bool
+
 	// UnitFunc is the formatter applied to the rate value in order to format it to subject-specific units.
 	UnitFunc UnitFormatFunc
+
 	// RateWatcher is a model that is used to track the rate, percentage, and time estimates. You probably don't
 	// want to change this.
 	Ratewatcher RateWatcher
+
 	// Bardrawer is the function used to turn the percentage and width into a progress bar. This can be overriden to
 	// pick between utf8 or ascii or to implement your own bar style.
 	Bardrawer BarDrawerFunction

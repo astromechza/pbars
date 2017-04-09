@@ -8,6 +8,8 @@ to 2 in order to give more useful formatting.
 */
 
 // FormatDuration is the same as Duration.String() but with a tweak for the number of decimal places.
+// This implementation allows up to 2 decimals for all fields rather than the 6 or 9 that the standard
+// version prints.
 func FormatDuration(d time.Duration) string {
 
 	// Largest time is 2540400h10m10.000000000s
@@ -97,8 +99,10 @@ func fmtFrac(buf []byte, v uint64, prec int) (nw int, nv uint64) {
 		buf[w] = byte(v%10) + '0'
 		v /= 10
 	}
-	w--
-	buf[w] = '.'
+	if prec > 0 {
+		w--
+		buf[w] = '.'
+	}
 	return w, v
 }
 
