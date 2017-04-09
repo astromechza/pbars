@@ -37,3 +37,9 @@ pbars.NewProgressPrinter("My Title", 50, false)   // ascii mode
 By default the progress bar rate is formatted as 'units' per second. But often you'll want a measure of bytes or bits.
 The ProgressPrinter struct allows you to set the `UnitFunc` to be whatever you want as long as it looks like
 `func(v float64) string`. An example is the `pbars.ByteFormatFunc` that will convert to `B`, `KB`, `MB` etc.
+
+- `Interruptf` method for printing messages while the progress bar continues (see the example)
+
+- `Clear` method for clearing and removing the progress bar once you no longer need it
+
+- MIT licensed, use it, abuse it.
