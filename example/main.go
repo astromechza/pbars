@@ -23,7 +23,6 @@ func main() {
 
 	// setup the printer
 	pp = pbars.NewProgressPrinter("My Title", 50, false)
-	pp.NonTTY = true
 
 	// interrupt 1
 	pp.Interruptf("Beginning progress..")
